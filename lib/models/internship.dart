@@ -1,65 +1,71 @@
 class Internship {
-  final String id;
-  final String? userId;
-  final String title;
-  final String company;
-  final String? role;
-  final String? duration;
+  final int id;
+  final int studentId;
+  final String? studentName;
+  final String? regNo;
+  final String companyName;
+  final String role;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String description;
   final String status;
-  final String? assignedByAdmin;
-  final List<String>? requiredSkills;
-  final String? completionCertificateUrl;
   final DateTime createdAt;
-  final DateTime updatedAt;
+
+  final String? completionCertificateUrl;
+  final List<String>? requiredSkills;
+
+  // Getters for backward compatibility with UI
+  String get title => role;
+  String get company => companyName;
+  String get duration => '${startDate.month}/${startDate.year} - ${endDate.month}/${endDate.year}';
 
   Internship({
     required this.id,
-    this.userId,
-    required this.title,
-    required this.company,
-    this.role,
-    this.duration,
+    required this.studentId,
+    this.studentName,
+    this.regNo,
+    required this.companyName,
+    required this.role,
+    required this.startDate,
+    required this.endDate,
+    required this.description,
     required this.status,
-    this.assignedByAdmin,
-    this.requiredSkills,
-    this.completionCertificateUrl,
     required this.createdAt,
-    required this.updatedAt,
+    this.completionCertificateUrl,
+    this.requiredSkills,
   });
 
   factory Internship.fromJson(Map<String, dynamic> json) {
     return Internship(
-      id: json['id'] as String,
-      userId: json['user_id'] as String?,
-      title: json['title'] as String,
-      company: json['company'] as String,
-      role: json['role'] as String?,
-      duration: json['duration'] as String?,
+      id: json['id'] as int,
+      studentId: json['student_id'] as int,
+      studentName: json['student_name'] as String?,
+      regNo: json['reg_no'] as String?,
+      companyName: json['company_name'] as String,
+      role: json['role'] as String,
+      startDate: DateTime.parse(json['start_date'] as String),
+      endDate: DateTime.parse(json['end_date'] as String),
+      description: json['description'] as String,
       status: json['status'] as String,
-      assignedByAdmin: json['assigned_by_admin'] as String?,
-      requiredSkills: json['required_skills'] != null
-          ? List<String>.from(json['required_skills'] as List)
-          : null,
-      completionCertificateUrl: json['completion_certificate_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      completionCertificateUrl: json['certificate_file'] as String?,
+      requiredSkills: json['required_skills'] != null 
+          ? List<String>.from(json['required_skills'] as List) 
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'user_id': userId,
-      'title': title,
-      'company': company,
+      'student_id': studentId,
+      'company_name': companyName,
       'role': role,
-      'duration': duration,
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
+      'description': description,
       'status': status,
-      'assigned_by_admin': assignedByAdmin,
-      'required_skills': requiredSkills,
-      'completion_certificate_url': completionCertificateUrl,
       'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
     };
   }
 }

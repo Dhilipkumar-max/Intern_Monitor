@@ -8,8 +8,10 @@ import '../../models/user_profile.dart';
 import '../../models/skill.dart';
 import '../../models/certificate.dart';
 import '../../models/internship.dart';
+import '../../models/project.dart';
 import '../../widgets/app_sidebar.dart';
 import '../../widgets/status_badge.dart';
+import '../../config/api_config.dart';
 
 class StudentDetailScreen extends StatefulWidget {
   final UserProfile student;
@@ -22,11 +24,13 @@ class StudentDetailScreen extends StatefulWidget {
 class _StudentDetailScreenState extends State<StudentDetailScreen> {
   final AuthService _authService = AuthService();
   final StudentService _studentService = StudentService();
+  final AdminService _adminService = AdminService();
 
   UserProfile? _adminProfile;
   List<Skill> _skills = [];
   List<Certificate> _certificates = [];
   List<Internship> _internships = [];
+  List<Project> _projects = [];
   bool _isLoading = true;
 
   @override
@@ -37,19 +41,21 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final userId = _authService.currentUserId;
+    final userId = await _authService.currentUserId;
     if (userId != null) {
       _adminProfile = await _authService.getUserProfile(userId);
       _skills = await _studentService.getSkills(widget.student.id);
       _certificates = await _studentService.getCertificates(widget.student.id);
       _internships = await _studentService.getInternships(widget.student.id);
+      _projects = await _adminService.getStudentProjects(widget.student.id);
     }
     setState(() => _isLoading = false);
   }
 
   Future<void> _viewFile(String? urlString) async {
     if (urlString == null) return;
-    final url = Uri.parse(urlString);
+    final fullUrl = ApiConfig.getFileUrl(urlString);
+    final url = Uri.parse(fullUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     }
@@ -70,13 +76,41 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
           AppSidebar(
             currentRoute: '/admin/students',
             items: [
-              SidebarItem(icon: Icons.dashboard, label: 'Dashboard', route: '/admin/dashboard'),
-              SidebarItem(icon: Icons.people, label: 'Students', route: '/admin/students'),
-              SidebarItem(icon: Icons.search, label: 'Skill Search', route: '/admin/skill-search'),
-              SidebarItem(icon: Icons.assignment, label: 'Assign Internship', route: '/admin/assign-internship'),
-              SidebarItem(icon: Icons.verified, label: 'Verify Certificates', route: '/admin/verify-certificates'),
-              SidebarItem(icon: Icons.person_add, label: 'Add Students', route: '/admin/add-students'),
-              SidebarItem(icon: Icons.analytics, label: 'Reports', route: '/admin/reports'),
+              SidebarItem(
+                icon: Icons.dashboard,
+                label: 'Dashboard',
+                route: '/admin/dashboard',
+              ),
+              SidebarItem(
+                icon: Icons.people,
+                label: 'Students',
+                route: '/admin/students',
+              ),
+              SidebarItem(
+                icon: Icons.search,
+                label: 'Skill Search',
+                route: '/admin/skill-search',
+              ),
+              SidebarItem(
+                icon: Icons.assignment,
+                label: 'Assign Internship',
+                route: '/admin/assign-internship',
+              ),
+              SidebarItem(
+                icon: Icons.verified,
+                label: 'Verify Certificates',
+                route: '/admin/verify-certificates',
+              ),
+              SidebarItem(
+                icon: Icons.person_add,
+                label: 'Add Students',
+                route: '/admin/add-students',
+              ),
+              SidebarItem(
+                icon: Icons.analytics,
+                label: 'Reports',
+                route: '/admin/reports',
+              ),
             ],
             onLogout: _handleLogout,
             userName: _adminProfile?.name ?? 'Admin',
@@ -101,7 +135,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                               const SizedBox(width: 8),
                               const Text(
                                 'Student Details',
-                                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -118,11 +155,13 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                                     _buildInfoCard(),
                                     const SizedBox(height: 24),
                                     _buildResumeCard(),
+                                    const SizedBox(height: 24),
+                                    _buildSocialLinksCard(),
                                   ],
                                 ),
                               ),
                               const SizedBox(width: 24),
-                              // Skills & Certificates
+                              // Skills, Certificates & Projects
                               Expanded(
                                 flex: 2,
                                 child: Column(
@@ -132,6 +171,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                                     _buildCertificatesCard(),
                                     const SizedBox(height: 24),
                                     _buildInternshipCard(),
+                                    const SizedBox(height: 24),
+                                    _buildProjectsCard(),
                                   ],
                                 ),
                               ),
@@ -158,12 +199,22 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
               child: Text(
                 widget.student.name[0].toUpperCase(),
-                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(widget.student.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text(widget.student.email, style: const TextStyle(color: AppTheme.textSecondary)),
+            Text(
+              widget.student.name,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.student.email,
+              style: const TextStyle(color: AppTheme.textSecondary),
+            ),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
@@ -244,7 +295,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 );
                 return;
               }
-              
+
               final success = await _adminService.sendNotification(
                 studentId: widget.student.id,
                 title: titleController.text,
@@ -281,6 +332,53 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     );
   }
 
+  Widget _buildSocialLinksCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Social Links',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            if (widget.student.githubUrl != null)
+              ListTile(
+                leading: const Icon(Icons.code, color: AppTheme.primaryColor),
+                title: const Text('GitHub Profile'),
+                subtitle: Text(widget.student.githubUrl!),
+                trailing: IconButton(
+                  icon: const Icon(Icons.open_in_new, size: 20),
+                  onPressed: () => _viewFile(widget.student.githubUrl),
+                ),
+              ),
+            if (widget.student.linkedinUrl != null)
+              ListTile(
+                leading: const Icon(Icons.business, color: AppTheme.infoColor),
+                title: const Text('LinkedIn Profile'),
+                subtitle: Text(widget.student.linkedinUrl!),
+                trailing: IconButton(
+                  icon: const Icon(Icons.open_in_new, size: 20),
+                  onPressed: () => _viewFile(widget.student.linkedinUrl),
+                ),
+              ),
+            if (widget.student.githubUrl == null &&
+                widget.student.linkedinUrl == null)
+              const Text(
+                'No social links provided.',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildResumeCard() {
     return Card(
       child: Padding(
@@ -288,7 +386,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Resume', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Resume',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             if (widget.student.resumeUrl != null)
               SizedBox(
@@ -297,11 +398,82 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                   onPressed: () => _viewFile(widget.student.resumeUrl),
                   icon: const Icon(Icons.description),
                   label: const Text('View Resume PDF'),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.infoColor),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.infoColor,
+                  ),
                 ),
               )
             else
-              const Text('No resume uploaded.', style: TextStyle(fontStyle: FontStyle.italic, color: AppTheme.textSecondary)),
+              const Text(
+                'No resume uploaded.',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectsCard() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Projects',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            if (_projects.isEmpty)
+              const Text('No projects added.')
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _projects.length,
+                separatorBuilder: (context, index) => const Divider(),
+                itemBuilder: (context, index) {
+                  final project = _projects[index];
+                  return ListTile(
+                    title: Text(project.title),
+                    subtitle: Text(
+                      project.description.length > 60
+                          ? '${project.description.substring(0, 60)}...'
+                          : project.description,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (project.githubUrl != null)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.code,
+                              size: 20,
+                              color: AppTheme.primaryColor,
+                            ),
+                            onPressed: () => _viewFile(project.githubUrl),
+                            tooltip: 'View GitHub Repository',
+                          ),
+                        if (project.liveUrl != null)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.link,
+                              size: 20,
+                              color: AppTheme.infoColor,
+                            ),
+                            onPressed: () => _viewFile(project.liveUrl),
+                            tooltip: 'View Live Demo',
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -315,7 +487,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Skills', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Skills',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             if (_skills.isEmpty)
               const Text('No skills listed.')
@@ -323,10 +498,14 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _skills.map((skill) => Chip(
-                  label: Text('${skill.skillName} (${skill.skillLevel})'),
-                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                )).toList(),
+                children: _skills
+                    .map(
+                      (skill) => Chip(
+                        label: Text('${skill.skillName} (${skill.skillLevel})'),
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                      ),
+                    )
+                    .toList(),
               ),
           ],
         ),
@@ -341,7 +520,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Certificates', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Certificates',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             if (_certificates.isEmpty)
               const Text('No certificates uploaded.')
@@ -382,21 +564,40 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Internship History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Internship History',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             if (_internships.isEmpty)
               const Text('No internships assigned yet.')
             else
-              ..._internships.map((internship) => Column(
-                children: [
-                  ListTile(
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _internships.length,
+                separatorBuilder: (context, index) => const Divider(),
+                itemBuilder: (context, index) {
+                  final internship = _internships[index];
+                  return ListTile(
                     title: Text(internship.title),
                     subtitle: Text(internship.company),
-                    trailing: StatusBadge(status: internship.status),
-                  ),
-                  const Divider(),
-                ],
-              )),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        StatusBadge(status: internship.status),
+                        if (internship.completionCertificateUrl != null)
+                          IconButton(
+                            icon: const Icon(Icons.open_in_new, size: 20),
+                            onPressed: () =>
+                                _viewFile(internship.completionCertificateUrl),
+                            tooltip: 'View Completion Certificate',
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),

@@ -41,7 +41,7 @@ class _AssignInternshipScreenState extends State<AssignInternshipScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final userId = _authService.currentUserId;
+    final userId = await _authService.currentUserId;
     if (userId != null) {
       _adminProfile = await _authService.getUserProfile(userId);
       _students = await _adminService.getAllStudents();
@@ -74,7 +74,8 @@ class _AssignInternshipScreenState extends State<AssignInternshipScreen> {
 
     setState(() => _isAssigning = true);
 
-    final adminId = _authService.currentUserId!;
+    final adminId = await _authService.currentUserId;
+    if (adminId == null) return;
     final success = await _adminService.assignInternshipToStudents(
       title: _titleController.text.trim(),
       company: _companyController.text.trim(),

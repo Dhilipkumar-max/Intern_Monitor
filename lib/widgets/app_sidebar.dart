@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
 class AppSidebar extends StatelessWidget {
@@ -19,30 +20,20 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      width: 260,
-      decoration: BoxDecoration(
-        color: AppTheme.sidebarBackground,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(2, 0),
-          ),
-        ],
+      width: 280,
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        border: Border(
+          right: BorderSide(color: AppTheme.surfaceContainerHigh, width: 1),
+        ),
       ),
       child: Column(
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.white.withOpacity(0.05),
-                ),
-              ),
-            ),
+            padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
             child: Row(
               children: [
                 Hero(
@@ -51,18 +42,11 @@ class AppSidebar extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+                        colors: [AppTheme.primaryColor, AppTheme.primaryContainer],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.school_rounded,
@@ -72,15 +56,12 @@ class AppSidebar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
-                  child: Text(
-                    'InternInfo',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
+                Text(
+                  'InternInfo',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ],
@@ -90,7 +71,7 @@ class AppSidebar extends StatelessWidget {
           // Navigation Items
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               children: items.map((item) {
                 final isActive = currentRoute == item.route;
                 return _SidebarNavItem(
@@ -105,25 +86,23 @@ class AppSidebar extends StatelessWidget {
 
           // User Profile & Logout
           Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
               border: Border(
-                top: BorderSide(
-                  color: Colors.white.withOpacity(0.05),
-                ),
+                top: BorderSide(color: AppTheme.surfaceContainerHigh, width: 1),
               ),
             ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5), width: 2),
-                      ),
-                      child: CircleAvatar(
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
                         radius: 18,
                         backgroundColor: AppTheme.primaryColor,
                         child: Text(
@@ -135,33 +114,28 @@ class AppSidebar extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userName,
+                              style: theme.textTheme.labelLarge,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            userEmail,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 11,
+                            Text(
+                              userEmail,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -169,13 +143,13 @@ class AppSidebar extends StatelessWidget {
                   child: TextButton.icon(
                     onPressed: onLogout,
                     icon: const Icon(Icons.logout_rounded, size: 18),
-                    label: const Text('Logout'),
+                    label: const Text('Sign Out'),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.white.withOpacity(0.7),
+                      foregroundColor: AppTheme.tertiaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.white.withOpacity(0.05),
+                      backgroundColor: AppTheme.tertiaryColor.withOpacity(0.05),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),

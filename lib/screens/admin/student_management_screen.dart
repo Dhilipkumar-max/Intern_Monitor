@@ -34,7 +34,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final userId = _authService.currentUserId;
+    final userId = await _authService.currentUserId;
     if (userId != null) {
       _adminProfile = await _authService.getUserProfile(userId);
       _allStudents = await _adminService.getAllStudents();
@@ -102,10 +102,12 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                           Card(
                             child: Padding(
                               padding: const EdgeInsets.all(16),
-                              child: Row(
+                              child: Wrap(
+                                spacing: 16,
+                                runSpacing: 16,
                                 children: [
-                                  Expanded(
-                                    flex: 3,
+                                  SizedBox(
+                                    width: 300,
                                     child: TextField(
                                       controller: _searchController,
                                       decoration: const InputDecoration(
@@ -115,9 +117,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                                       onChanged: (_) => _applyFilters(),
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    flex: 2,
+                                  SizedBox(
+                                    width: 200,
                                     child: DropdownButtonFormField<String>(
                                       value: _selectedDepartment,
                                       decoration: const InputDecoration(labelText: 'Department'),
@@ -130,9 +131,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                                       },
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    flex: 1,
+                                  SizedBox(
+                                    width: 150,
                                     child: DropdownButtonFormField<int?>(
                                       value: _selectedYear,
                                       decoration: const InputDecoration(labelText: 'Year'),

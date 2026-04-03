@@ -1,0 +1,56 @@
+
+--- STUDENTS TABLE ---
+id | int | NO | PRI | auto_increment
+reg_no | varchar(20) | NO | UNI | 
+name | varchar(100) | NO |  | 
+email | varchar(100) | YES | UNI | 
+phone | varchar(15) | YES |  | 
+department_id | int | YES | MUL | 
+year | int | YES |  | 
+password | varchar(255) | YES |  | 
+created_at | timestamp | YES |  | DEFAULT_GENERATED
+resume_url | varchar(255) | YES |  | 
+
+--- DEPARTMENTS TABLE ---
+id | int | NO | PRI | auto_increment
+department_name | varchar(100) | NO |  | 
+department_code | varchar(10) | YES |  | 
+
+--- SKILLS TABLE ---
+id | int | NO | PRI | auto_increment
+skill_name | varchar(100) | YES | UNI | 
+
+--- STUDENT_SKILLS TABLE ---
+id | int | NO | PRI | auto_increment
+student_id | int | YES | MUL | 
+skill_id | int | YES | MUL | 
+skill_level | varchar(50) | YES |  | 
+
+--- NOTIFICATIONS TABLE ---
+id | int | NO | PRI | auto_increment
+student_id | int | YES | MUL | 
+title | varchar(100) | YES |  | 
+message | text | YES |  | 
+type | varchar(50) | YES |  | 
+status | varchar(20) | YES |  | 
+created_at | timestamp | YES |  | DEFAULT_GENERATED
+
+--- INTERNSHIPS TABLE ---
+id | int | NO | PRI | auto_increment
+student_id | int | YES | MUL | 
+company_name | varchar(100) | YES |  | 
+role | varchar(100) | YES |  | 
+start_date | date | YES |  | 
+end_date | date | YES |  | 
+description | text | YES |  | 
+status | varchar(50) | YES |  | 
+created_at | timestamp | YES |  | DEFAULT_GENERATED
+
+--- CERTIFICATES TABLE ---
+id | int | NO | PRI | auto_increment
+student_id | int | YES | MUL | 
+certificate_type | varchar(100) | YES |  | 
+file_url | varchar(255) | YES |  | 
+file_name | varchar(255) | YES |  | 
+status | varchar(50) | YES |  | 
+uploaded_at | timestamp | YES |  | DEFAULT_GENERATED

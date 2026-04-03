@@ -1,0 +1,30 @@
+﻿Tables_in_internship_management
+admins
+certificates
+departments
+internships
+notifications
+projects
+skills
+student_skills
+students
+Field	Type	Null	Key	Default	Extra
+id	int	NO	PRI	NULL	auto_increment
+reg_no	varchar(20)	NO	UNI	NULL	
+name	varchar(100)	NO		NULL	
+email	varchar(100)	YES	UNI	NULL	
+phone	varchar(15)	YES		NULL	
+department_id	int	YES	MUL	NULL	
+year	int	YES		NULL	
+password	varchar(255)	YES		NULL	
+created_at	timestamp	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+resume_url	varchar(255)	YES		NULL	
+github_url	varchar(255)	YES		NULL	
+linkedin_url	varchar(255)	YES		NULL	
+Field	Type	Null	Key	Default	Extra
+id	int	NO	PRI	NULL	auto_increment
+name	varchar(100)	YES		NULL	
+email	varchar(100)	YES	UNI	NULL	
+password	varchar(255)	YES		NULL	
+role	varchar(50)	YES		NULL	
+created_at	timestamp	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED

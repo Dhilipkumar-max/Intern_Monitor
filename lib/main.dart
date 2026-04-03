@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'config/supabase_config.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/student/student_dashboard.dart';
@@ -9,6 +8,7 @@ import 'screens/student/resume_upload_screen.dart';
 import 'screens/student/certificates_screen.dart';
 import 'screens/student/internship_details_screen.dart';
 import 'screens/student/notifications_screen.dart';
+import 'screens/student/student_projects_screen.dart';
 import 'screens/admin/admin_dashboard.dart';
 import 'screens/admin/student_management_screen.dart';
 import 'screens/admin/student_detail_screen.dart';
@@ -19,12 +19,9 @@ import 'screens/admin/assign_internship_screen.dart';
 import 'screens/admin/reports_screen.dart';
 import 'models/user_profile.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Supabase
-  await SupabaseConfig.initialize();
-  
+
   runApp(const MyApp());
 }
 
@@ -40,7 +37,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
-        
+
         // Student Routes
         '/student/dashboard': (context) => const StudentDashboard(),
         '/student/profile': (context) => const StudentProfileScreen(),
@@ -48,13 +45,15 @@ class MyApp extends StatelessWidget {
         '/student/resume': (context) => const ResumeUploadScreen(),
         '/student/certificates': (context) => const CertificatesScreen(),
         '/student/internship': (context) => const InternshipDetailsScreen(),
+        '/student/projects': (context) => const StudentProjectsScreen(),
         '/student/notifications': (context) => const NotificationsScreen(),
-        
+
         // Admin Routes
         '/admin/dashboard': (context) => const AdminDashboard(),
         '/admin/students': (context) => const StudentManagementScreen(),
         '/admin/skill-search': (context) => const SkillBasedSearchScreen(),
-        '/admin/verify-certificates': (context) => const CertificateVerificationScreen(),
+        '/admin/verify-certificates': (context) =>
+            const CertificateVerificationScreen(),
         '/admin/assign-internship': (context) => const AssignInternshipScreen(),
         '/admin/add-students': (context) => const AddStudentsScreen(),
         '/admin/reports': (context) => const ReportsScreen(),

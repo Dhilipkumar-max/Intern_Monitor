@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -33,7 +34,7 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final userId = _authService.currentUserId;
+    final userId = await _authService.currentUserId;
     if (userId != null) {
       final profile = await _authService.getUserProfile(userId);
       final internships = await _studentService.getInternships(userId);
@@ -88,7 +89,8 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
 
     if (result != null) {
       setState(() => _isUploading = true);
-      final userId = _authService.currentUserId!;
+      final userId = await _authService.currentUserId;
+      if (userId == null) return;
       final file = result.files.first;
       
       final url = await _studentService.uploadCertificateFile(userId, file.name, file.bytes!);
@@ -119,50 +121,46 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Internship' : 'Add Internship Experience'),
-          content: Container(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
             width: 500,
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+            ),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Internship Title',
-                      hintText: 'e.g. Flutter Developer Intern',
+                  Text(
+                    isEditing ? 'Edit Professional History' : 'New Internship Entry',
+                    style: GoogleFonts.manrope(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: companyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Company Name',
-                      hintText: 'e.g. Tech Solutions',
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Maintain your academic and professional record accuracy.',
+                    style: GoogleFonts.inter(color: AppTheme.textSecondary, fontSize: 14),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: roleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Role/Responsibilities',
-                      hintText: 'e.g. Developing mobile UI with Flutter',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: durationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Duration',
-                      hintText: 'e.g. June 2023 - August 2023',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
+                  _buildDialogField('Internship Title', 'e.g. Frontend Engineering Intern', titleController),
+                  const SizedBox(height: 20),
+                  _buildDialogField('Company/Organization', 'e.g. Google India', companyController),
+                  const SizedBox(height: 20),
+                  _buildDialogField('Role/Responsibilities', 'Brief description of your work', roleController, maxLines: 3),
+                  const SizedBox(height: 20),
+                  _buildDialogField('Tenure/Duration', 'e.g. May 2023 - July 2023', durationController),
+                  const SizedBox(height: 32),
                   if (certUrl == null)
                     SizedBox(
                       width: double.infinity,
-                      child: OutlinedButton.icon(
+                      child: TextButton.icon(
                         onPressed: isUploadingCert ? null : () async {
                           final result = await FilePicker.platform.pickFiles(
                             type: FileType.custom,
@@ -172,8 +170,10 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
                           if (result != null) {
                             setDialogState(() => isUploadingCert = true);
                             final file = result.files.first;
+                            final userId = await _authService.currentUserId;
+                            if (userId == null) return;
                             final url = await _studentService.uploadCertificateFile(
-                              _authService.currentUserId!, 
+                              userId, 
                               file.name, 
                               file.bytes!
                             );
@@ -185,109 +185,154 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
                         },
                         icon: isUploadingCert 
                           ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) 
-                          : const Icon(Icons.upload_file),
-                        label: Text(isUploadingCert ? 'Uploading...' : 'Upload Completion Certificate'),
+                          : const Icon(Icons.upload_file_rounded),
+                        label: Text(isUploadingCert ? 'UPLOADING...' : 'ATTACH COMPLETION CERTIFICATE (OPTIONAL)'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.primaryColor,
+                          padding: const EdgeInsets.all(20),
+                          backgroundColor: AppTheme.primaryColor.withOpacity(0.05),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
                       ),
                     )
                   else
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.successColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.successColor.withOpacity(0.3)),
+                        color: AppTheme.primaryColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle, color: AppTheme.successColor),
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor),
                           const SizedBox(width: 12),
-                          const Expanded(child: Text('Certificate Attached', style: TextStyle(color: AppTheme.successColor, fontWeight: FontWeight.bold))),
+                          Expanded(
+                            child: Text(
+                              'Certificate Attached',
+                              style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: AppTheme.primaryColor),
+                            ),
+                          ),
                           IconButton(
-                            icon: const Icon(Icons.edit, size: 20),
+                            icon: const Icon(Icons.close_rounded, size: 20),
                             onPressed: () => setDialogState(() => certUrl = null),
-                            tooltip: 'Replace Certificate',
+                            tooltip: 'Remove',
                           ),
                         ],
                       ),
                     ),
+                  const SizedBox(height: 40),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Cancel', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: isSaving ? null : () async {
+                          if (titleController.text.isEmpty || companyController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Title and Company are required')),
+                            );
+                            return;
+                          }
+                          
+                          setDialogState(() => isSaving = true);
+                          try {
+                            bool success;
+                            if (isEditing) {
+                              success = await _studentService.updateInternship(
+                                internshipId: internship!.id,
+                                title: titleController.text.trim(),
+                                company: companyController.text.trim(),
+                                role: roleController.text.trim(),
+                                duration: durationController.text.trim(),
+                                certificateUrl: certUrl,
+                              );
+                            } else {
+                              final userId = await _authService.currentUserId;
+                              if (userId == null) return;
+                              success = await _studentService.addInternship(
+                                userId: userId,
+                                title: titleController.text.trim(),
+                                company: companyController.text.trim(),
+                                role: roleController.text.trim(),
+                                duration: durationController.text.trim(),
+                                certificateUrl: certUrl,
+                              );
+                            }
+
+                            if (success) {
+                              if (mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isEditing ? 'Record updated' : 'Experience added'), 
+                                    backgroundColor: AppTheme.primaryColor
+                                  ),
+                                );
+                                _loadData();
+                              }
+                            }
+                          } finally {
+                            if (mounted) setDialogState(() => isSaving = false);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: isSaving 
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Text(isEditing ? 'Update Experience' : 'Save Experience', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isSaving ? null : () async {
-                if (titleController.text.isEmpty || companyController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill in required fields')),
-                  );
-                  return;
-                }
-                
-                setDialogState(() => isSaving = true);
-                try {
-                  bool success;
-                  if (isEditing) {
-                    success = await _studentService.updateInternship(
-                      internshipId: internship!.id,
-                      title: titleController.text.trim(),
-                      company: companyController.text.trim(),
-                      role: roleController.text.trim(),
-                      duration: durationController.text.trim(),
-                      certificateUrl: certUrl,
-                    );
-                  } else {
-                    success = await _studentService.addInternship(
-                      userId: _authService.currentUserId!,
-                      title: titleController.text.trim(),
-                      company: companyController.text.trim(),
-                      role: roleController.text.trim(),
-                      duration: durationController.text.trim(),
-                      certificateUrl: certUrl,
-                    );
-                  }
-
-                  if (success) {
-                    if (mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(isEditing ? 'Internship updated successfully' : 'Internship added successfully'), 
-                          backgroundColor: AppTheme.successColor
-                        ),
-                      );
-                      _loadData();
-                    }
-                  } else {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Failed to save internship. Please try again.'), backgroundColor: AppTheme.errorColor),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.errorColor),
-                    );
-                  }
-                } finally {
-                  if (mounted) {
-                    setDialogState(() => isSaving = false);
-                  }
-                }
-              },
-              child: isSaving 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Text(isEditing ? 'Update' : 'Save'),
-            ),
-          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDialogField(String label, String hint, TextEditingController controller, {int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: AppTheme.textSecondary,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.inter(color: AppTheme.textSecondary.withOpacity(0.5), fontSize: 14),
+            filled: true,
+            fillColor: AppTheme.surfaceContainerLow,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.all(16),
+          ),
+        ),
+      ],
     );
   }
 
@@ -300,102 +345,164 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
+      );
+    }
+
+    final isMobile = MediaQuery.of(context).size.width < 900;
+
     return Scaffold(
       body: Row(
         children: [
-          AppSidebar(
-            currentRoute: '/student/internship',
-            items: [
-              SidebarItem(icon: Icons.dashboard, label: 'Dashboard', route: '/student/dashboard'),
-              SidebarItem(icon: Icons.person, label: 'Profile', route: '/student/profile'),
-              SidebarItem(icon: Icons.code, label: 'Skills', route: '/student/skills'),
-              SidebarItem(icon: Icons.description, label: 'Resume', route: '/student/resume'),
-              SidebarItem(icon: Icons.workspace_premium, label: 'Certificates', route: '/student/certificates'),
-              SidebarItem(icon: Icons.business_center, label: 'Internship', route: '/student/internship'),
-              SidebarItem(icon: Icons.notifications, label: 'Notifications', route: '/student/notifications'),
-            ],
-            onLogout: _handleLogout,
-            userName: _profile?.name ?? 'Student',
-            userEmail: _profile?.email ?? '',
-          ),
+          if (!isMobile)
+            AppSidebar(
+              currentRoute: '/student/internship',
+              items: _buildSidebarItems(),
+              onLogout: _handleLogout,
+              userName: _profile?.name ?? 'Student',
+              userEmail: _profile?.email ?? '',
+            ),
+
           Expanded(
             child: Container(
               color: AppTheme.backgroundColor,
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Internships',
-                                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    'Manage your internship experiences and certificates',
-                                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
-                                  ),
-                                ],
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () => _showInternshipDialog(),
-                                icon: const Icon(Icons.add),
-                                label: const Text('Add Internship'),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
-                          if (_internships == null || _internships!.isEmpty)
-                            Center(
-                              child: Container(
-                                padding: const EdgeInsets.all(48),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppTheme.borderColor),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.business_center_outlined, size: 80, color: AppTheme.textSecondary.withOpacity(0.3)),
-                                    const SizedBox(height: 24),
-                                    const Text(
-                                      'No Internships Found',
-                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                      'Click the "Add Internship" button to record your experience.',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: AppTheme.textSecondary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          else
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _internships!.length,
-                              itemBuilder: (context, index) {
-                                final internship = _internships![index];
-                                return _buildInternshipCard(internship);
-                              },
-                            ),
-                        ],
-                      ),
+              child: CustomScrollView(
+                slivers: [
+                  _buildTopAppBar(isMobile),
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 24 : 48,
+                      vertical: 32,
                     ),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _buildHeader(isMobile),
+                        const SizedBox(height: 48),
+                        if (_internships == null || _internships!.isEmpty)
+                          _buildEmptyState()
+                        else
+                          ..._internships!.map((internship) => _buildInternshipCard(internship)).toList(),
+                        const SizedBox(height: 100),
+                      ]),
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: isMobile ? _buildBottomNavBar() : null,
+    );
+  }
+
+  List<SidebarItem> _buildSidebarItems() {
+    return [
+      SidebarItem(icon: Icons.dashboard_rounded, label: 'Dashboard', route: '/student/dashboard'),
+      SidebarItem(icon: Icons.person_rounded, label: 'Profile', route: '/student/profile'),
+      SidebarItem(icon: Icons.code_rounded, label: 'Skills', route: '/student/skills'),
+      SidebarItem(icon: Icons.description_rounded, label: 'Resume', route: '/student/resume'),
+      SidebarItem(icon: Icons.workspace_premium_rounded, label: 'Certificates', route: '/student/certificates'),
+      SidebarItem(icon: Icons.business_center_rounded, label: 'Internship', route: '/student/internship'),
+      SidebarItem(icon: Icons.rocket_launch_rounded, label: 'Projects', route: '/student/projects'),
+      SidebarItem(icon: Icons.notifications_rounded, label: 'Notifications', route: '/student/notifications'),
+    ];
+  }
+
+  Widget _buildTopAppBar(bool isMobile) {
+    return SliverAppBar(
+      floating: true,
+      backgroundColor: Colors.white.withOpacity(0.7),
+      surfaceTintColor: Colors.transparent,
+      leading: isMobile 
+        ? IconButton(
+            icon: const Icon(Icons.menu_rounded, color: AppTheme.primaryColor),
+            onPressed: () {},
+          )
+        : null,
+      title: isMobile 
+        ? Text('Internships', style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppTheme.primaryColor))
+        : null,
+    );
+  }
+
+  Widget _buildHeader(bool isMobile) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'FIELD EXPERIENCE',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textSecondary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Professional History',
+                style: GoogleFonts.manrope(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isMobile)
+          ElevatedButton.icon(
+            onPressed: () => _showInternshipDialog(),
+            icon: const Icon(Icons.add_rounded, size: 20),
+            label: Text('New Experience', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(64),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.business_center_rounded, size: 64, color: AppTheme.textSecondary.withOpacity(0.3)),
+          const SizedBox(height: 24),
+          Text(
+            'No Internships Recorded',
+            style: GoogleFonts.manrope(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Keep your professional record updated by adding your placement details.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 32),
+          TextButton.icon(
+            onPressed: () => _showInternshipDialog(),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add Your First Internship'),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
           ),
         ],
       ),
@@ -405,173 +512,280 @@ class _InternshipDetailsScreenState extends State<InternshipDetailsScreen> {
   Widget _buildInternshipCard(Internship internship) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
-      constraints: const BoxConstraints(maxWidth: 900),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: AppTheme.borderColor.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          internship.title,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.business, size: 16, color: AppTheme.textSecondary),
-                            const SizedBox(width: 8),
-                            Text(
-                              internship.company,
-                              style: const TextStyle(fontSize: 16, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      StatusBadge(status: internship.status),
-                      const SizedBox(width: 8),
-                      PopupMenuButton(
-                        icon: const Icon(Icons.more_vert, size: 20),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            onTap: () => Future.delayed(Duration.zero, () => _showInternshipDialog(internship: internship)),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.edit, size: 18),
-                                SizedBox(width: 8),
-                                Text('Edit'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            onTap: () => Future.delayed(Duration.zero, () => _deleteInternship(internship)),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.delete, size: 18, color: AppTheme.errorColor),
-                                SizedBox(width: 8),
-                                Text('Delete', style: TextStyle(color: AppTheme.errorColor)),
-                              ],
-                            ),
-                          ),
-                        ],
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.business_rounded, color: AppTheme.primaryColor, size: 28),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      internship.title.toUpperCase(),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primaryColor,
+                        letterSpacing: 1.0,
                       ),
-                    ],
-                  ),
+                    ),
+                    Text(
+                      internship.company,
+                      style: GoogleFonts.manrope(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      internship.duration ?? 'Duration Not Specified',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  StatusBadge(status: internship.status),
+                  const SizedBox(height: 8),
+                  _buildActionMenu(internship),
                 ],
               ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(child: _buildInfoItem(Icons.work_outline, 'Role', internship.role ?? 'N/A')),
-                  Expanded(child: _buildInfoItem(Icons.timer_outlined, 'Duration', internship.duration ?? 'N/A')),
-                  Expanded(child: _buildInfoItem(Icons.calendar_today_outlined, 'Added On', internship.createdAt.toString().split(' ')[0])),
-                ],
-              ),
-              if (internship.requiredSkills != null && internship.requiredSkills!.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                const Text('Associated Skills', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: internship.requiredSkills!
-                      .map((s) => Chip(
-                            label: Text(s, style: const TextStyle(fontSize: 12)),
-                            backgroundColor: AppTheme.primaryColor.withOpacity(0.05),
-                            side: BorderSide.none,
-                          ))
-                      .toList(),
-                ),
-              ],
-              const SizedBox(height: 32),
-              if (internship.completionCertificateUrl == null)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isUploading ? null : () => _uploadCompletionCert(internship),
-                    icon: _isUploading 
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.upload_file),
-                    label: const Text('Upload Completion Certificate'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                      foregroundColor: AppTheme.primaryColor,
-                      elevation: 0,
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.successColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.successColor.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.successColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.verified, color: AppTheme.successColor, size: 20),
-                      ),
-                      const SizedBox(width: 16),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Internship Completed', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.successColor)),
-                          Text('Certificate verified and attached', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                        ],
-                      ),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: () => launchUrl(Uri.parse(internship.completionCertificateUrl!)),
-                        icon: const Icon(Icons.visibility_outlined, size: 18),
-                        label: const Text('View Certificate'),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
-        ),
+          const SizedBox(height: 32),
+          const Divider(height: 1),
+          const SizedBox(height: 32),
+          Text(
+            'ROLE & RESPONSIBILITIES',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textSecondary,
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            internship.role ?? 'No description provided.',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              height: 1.6,
+              color: AppTheme.textPrimary.withOpacity(0.8),
+            ),
+          ),
+          if (internship.requiredSkills != null && internship.requiredSkills!.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: internship.requiredSkills!
+                  .map((s) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          s,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ],
+          const SizedBox(height: 32),
+          _buildCertificateFooter(internship),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 14, color: AppTheme.textSecondary),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-          ],
+  Widget _buildCertificateFooter(Internship internship) {
+    final bool hasCert = internship.completionCertificateUrl != null;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: hasCert ? AppTheme.primaryColor.withOpacity(0.03) : AppTheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: hasCert ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.borderColor.withOpacity(0.5),
         ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.only(left: 22),
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: hasCert ? AppTheme.primaryColor.withOpacity(0.1) : Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              hasCert ? Icons.verified_rounded : Icons.pending_actions_rounded,
+              color: hasCert ? AppTheme.primaryColor : AppTheme.textSecondary,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasCert ? 'COMPLETION CERTIFICATE VERIFIED' : 'PENDING COMPLETION',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: hasCert ? AppTheme.primaryColor : AppTheme.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Text(
+                  hasCert ? 'Official credential attached to record' : 'Upload your cert when tenure completes',
+                  style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          if (hasCert)
+            TextButton.icon(
+              onPressed: () => launchUrl(Uri.parse(internship.completionCertificateUrl!)),
+              icon: const Icon(Icons.visibility_rounded, size: 18),
+              label: Text('View', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
+            )
+          else
+            TextButton.icon(
+              onPressed: () => _uploadCompletionCert(internship),
+              icon: const Icon(Icons.file_upload_rounded, size: 18),
+              label: Text('Upload', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+              style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionMenu(Internship internship) {
+    return PopupMenuButton(
+      icon: const Icon(Icons.more_horiz_rounded, color: AppTheme.textSecondary),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          onTap: () => Future.delayed(Duration.zero, () => _showInternshipDialog(internship: internship)),
+          child: Row(
+            children: [
+              const Icon(Icons.edit_rounded, size: 18),
+              const SizedBox(width: 12),
+              Text('Edit Details', style: GoogleFonts.inter()),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          onTap: () => Future.delayed(Duration.zero, () => _deleteInternship(internship)),
+          child: Row(
+            children: [
+              const Icon(Icons.delete_rounded, size: 18, color: AppTheme.errorColor),
+              const SizedBox(width: 12),
+              Text('Remove', style: GoogleFonts.inter(color: AppTheme.errorColor)),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.8),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(Icons.dashboard_rounded, 'Home', false, route: '/student/dashboard'),
+          _buildNavItem(Icons.rocket_launch_rounded, 'Projects', false, route: '/student/projects'),
+          _buildNavItem(Icons.workspace_premium_rounded, 'Certs', false, route: '/student/certificates'),
+          _buildNavItem(Icons.person_rounded, 'Profile', false, route: '/student/profile'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, bool isActive, {required String route}) {
+    return InkWell(
+      onTap: () => Navigator.pushReplacementNamed(context, route),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: isActive ? AppTheme.primaryColor.withOpacity(0.1) : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              icon,
+              color: isActive ? AppTheme.primaryColor : AppTheme.textSecondary.withOpacity(0.5),
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.inter(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: isActive ? AppTheme.primaryColor : AppTheme.textSecondary.withOpacity(0.5),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,0 +1,4 @@
+﻿name	email
+System Admin	admin@interninfo.com
+name	email	reg_no
+Dhilip	dhilipkumar.240086@cse.ritchennai.edu.in	2117240020086

@@ -45,7 +45,7 @@ class _AddStudentsScreenState extends State<AddStudentsScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final userId = _authService.currentUserId;
+    final userId = await _authService.currentUserId;
     if (userId != null) {
       _adminProfile = await _authService.getUserProfile(userId);
     }

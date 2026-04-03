@@ -1,290 +1,136 @@
-# 🎓 InternInfo - College Internship Management System
+# InternInfo - Advanced Internship Management Platform
 
-A comprehensive web application built with **Flutter Web** and **Supabase** for managing student internships, skills tracking, and certificate verification in colleges.
+InternInfo is a premium, high-fidelity internship management system designed for academic institutions to bridge the gap between students and professional opportunities. Built with a focus on "Editorial Academic Excellence," it provides a sophisticated interface for tracking professional growth, skill acquisition, and certificate verification.
 
----
-
-## 🚀 **Features**
-
-### **For Students**
-- ✅ **Dashboard** - Overview of profile completion, skills, internships, and notifications
-- ✅ **Profile Management** - Edit personal information and academic details
-- ✅ **Skills Management** - Add, edit, and delete technical/professional skills
-- 📄 **Resume Upload** - Upload and manage resume (PDF)
-- 📜 **Certificates** - Upload certificates and track verification status
-- 💼 **Internship Tracking** - View assigned internships and update progress
-- 🔔 **Notifications** - Receive updates on internships and certificate verifications
-
-### **For Admins**
-- ✅ **Admin Dashboard** - System-wide statistics and overview
-- 👥 **Student Management** - View and manage all student profiles
-- 🔍 **Skill-Based Search** - Find students by specific skills and levels
-- 📋 **Internship Assignment** - Create and assign internships to students
-- ✅ **Certificate Verification** - Verify or reject student certificates
-- ➕ **Student Account Creation** - Add students individually or via CSV
-- 📊 **Reports & Analytics** - Export data and view statistics
+## 🚀 Real-World Use Case
+In modern academic environments, tracking students' professional milestones (internships, projects, skills) is often fragmented across multiple platforms. InternInfo centralizes this journey, allowing students to build a verified professional portfolio while giving administrators powerful search and reporting tools to manage student success.
 
 ---
 
-## 🛠️ **Technology Stack**
+## ✨ Key Features
 
-- **Frontend**: Flutter Web
-- **Backend**: Supabase
-  - Authentication
-  - PostgreSQL Database
-  - Row Level Security (RLS)
-  - File Storage
-- **State Management**: Provider (built-in)
-- **UI/UX**: Material Design 3
+### 🎓 Student Interface
+- **Bento Grid Dashboard**: A modern overview of your professional journey with real-time progress tracking.
+- **Innovation Incubator (Projects)**: Showcase your technical projects with social and live demonstration links.
+- **Skill Matrix**: Dynamic tracking of technical proficiency with an interactive grid of chips.
+- **Professional Timeline**: A chronological history of internships with status-aware lifecycle management.
+- **Credential Vault (Certificates)**: Upload and manage certificates with an integrated administrative verification flow.
+- **Academic Profile**: Comprehensive management of personal, academic, and social (GitHub/LinkedIn) data.
+- **Responsive Navigation**: Seamless experience across Desktop (Sidebar) and Mobile (Bottom Bar).
+
+### 🛠️ administrator Interface
+- **Student Management**: Centralized hub to manage all registered students and their academic records.
+- **Skill-Based Search**: Advanced filtering to identify candidates based on specific technical proficiencies.
+- **Certificate Verification**: Review and approve student credentials with administrative remarks.
+- **Internship Assignment**: Track and manage internship placements across the student body.
+- **Reporting & Analytics**: Comprehensive exports and views of student professional preparedness.
 
 ---
 
-## 📦 **Installation & Setup**
+## 🛠️ Tech Stack
 
-### **Prerequisites**
-- Flutter SDK (3.9.2 or higher)
-- Chrome/Edge browser for web development
-- Supabase account
+### Frontend
+- **Framework**: Flutter (Web & Mobile)
+- **State Management**: Provider
+- **Design System**: Custom "Editorial Academic Excellence" (Tonal Stacking, Organic Structuralism)
+- **Typography**: Manrope (Headlines), Inter (Body)
+- **Architecture**: Material 3 with Custom Component Library
 
-### **1. Clone the Repository**
+### Backend
+- **Runtime**: Node.js & Express
+- **Authentication**: JWT (JSON Web Tokens) with Bcrypt hashing
+- **File Handling**: Multer for secure document uploads
+- **Environment**: Dotenv for configuration management
+
+### Database
+- **Engine**: MySQL
+- **Schema**: `internship_management` (Relational)
+
+---
+
+## 🏗️ System Architecture
+
+InternInfo follows a standard **Client-Server-Database** architecture:
+1. **Flutter Client**: Handles UI rendering and state management, communicating with the backend via RESTful APIs.
+2. **Express Server**: Orchestrates business logic, authentication, and file processing.
+3. **MySQL Database**: Stores persistent data for students, admins, certificates, skills, and internships.
+
+---
+
+## 📂 Project Structure
+
 ```bash
-cd d:\Flutter_Project\interninfo
-```
-
-### **2. Install Dependencies**
-```bash
-flutter pub get
-```
-
-### **3. Supabase Configuration**
-The Supabase project is already configured in `lib/config/supabase_config.dart`:
-- **URL**: `https://eqrxzrfpjzqqlbvgwesx.supabase.co`
-- **Anon Key**: Already configured
-
-### **4. Database Setup**
-The database schema has been automatically created with:
-- ✅ All tables (profiles, skills, internships, certificates, notifications)
-- ✅ Row Level Security policies
-- ✅ Storage buckets (resumes, certificates)
-- ✅ Indexes and triggers
-
-### **5. Create Test Users**
-Run the SQL script in Supabase SQL Editor to create test accounts:
-
-```sql
--- Create Admin User
-INSERT INTO auth.users (id, email)
-VALUES ('00000000-0000-0000-0000-000000000001', 'admin@college.edu')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO profiles (id, name, email, role)
-VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'Admin User',
-  'admin@college.edu',
-  'admin'
-) ON CONFLICT DO NOTHING;
-
--- Create Student User
-INSERT INTO auth.users (id, email)
-VALUES ('00000000-0000-0000-0000-000000000002', 'student@college.edu')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO profiles (id, name, email, register_number, department, year, role)
-VALUES (
-  '00000000-0000-0000-0000-000000000002',
-  'John Doe',
-  'student@college.edu',
-  'CS2021001',
-  'Computer Science',
-  3,
-  'student'
-) ON CONFLICT DO NOTHING;
-```
-
-**Note**: You'll need to set passwords via Supabase Dashboard → Authentication → Users
-
-### **6. Run the Application**
-```bash
-flutter run -d chrome
+interninfo/
+├── lib/                     # Flutter Frontend
+│   ├── config/              # API and Environment configurations
+│   ├── models/              # Data models (Student, Internship, Skill, etc.)
+│   ├── screens/             # UI Screens
+│   │   ├── admin/           # administrator modules
+│   │   ├── student/         # Student modules
+│   │   └── common/          # Shared screens (Login, Landing)
+│   ├── services/            # API communication and business logic
+│   ├── theme/               # Global design tokens and AppTheme
+│   └── widgets/             # Reusable UI components (Sidebar, Cards)
+├── server/                  # Node.js Backend
+│   ├── uploads/             # Stores uploaded resumes and certificates
+│   ├── index.js             # Main server entry point
+│   ├── db.js                # Database connection and utilities
+│   └── .env                 # Environment variables (JWT_SECRET, DB_CONFIG)
+└── pubspec.yaml             # Flutter dependencies
 ```
 
 ---
 
-## 🔐 **Default Login Credentials**
+## 📝 Page & Module Description
 
-After setting up test users:
-
-**Admin Account:**
-- Email: `admin@college.edu`
-- Password: (Set in Supabase Dashboard)
-
-**Student Account:**
-- Email: `student@college.edu`
-- Password: (Set in Supabase Dashboard)
-
----
-
-## 📁 **Project Structure**
-
-```
-lib/
-├── config/
-│   └── supabase_config.dart          # Supabase configuration
-├── theme/
-│   └── app_theme.dart                # App theme and colors
-├── models/
-│   ├── user_profile.dart             # User profile model
-│   ├── skill.dart                    # Skill model
-│   ├── internship.dart               # Internship model
-│   ├── certificate.dart              # Certificate model
-│   └── notification.dart             # Notification model
-├── services/
-│   ├── auth_service.dart             # Authentication service
-│   ├── student_service.dart          # Student operations
-│   └── admin_service.dart            # Admin operations
-├── widgets/
-│   ├── status_badge.dart             # Status badge widget
-│   ├── dashboard_card.dart           # Dashboard card widget
-│   └── app_sidebar.dart              # Sidebar navigation
-├── screens/
-│   ├── auth/
-│   │   └── login_screen.dart         # Login page
-│   ├── student/
-│   │   ├── student_dashboard.dart    # Student dashboard
-│   │   ├── student_profile_screen.dart # Profile management
-│   │   └── student_skills_screen.dart  # Skills management
-│   └── admin/
-│       └── admin_dashboard.dart      # Admin dashboard
-└── main.dart                         # App entry point
-```
+| Module | Function | Role |
+| :--- | :--- | :--- |
+| **Student Dashboard** | Bento-grid overview of progress and quick actions. | Student Home |
+| **Profile Screen** | Editorial form for academic and social identity management. | User Data |
+| **Project Screen** | Portfolio showcase for innovation and technical projects. | Proof of Work |
+| **Skills Screen** | Interactive ledger for tracking technical proficiency. | Skill Tracking |
+| **Internship Status** | Timeline view of professional history and current tenure. | Work History |
+| **Admin Dashboard** | Oversight panel for student body statistics and alerts. | Admin Home |
+| **Skill Search** | Reverse-search students based on technical stacks. | Recruitment |
+| **Verification Hub** | Queue for reviewing and approving student certificates. | Auditing |
 
 ---
 
-## ✅ **Completed Features**
+## ⚙️ Installation & Setup
 
-### **Backend (100%)**
-- ✅ Database schema with all tables
-- ✅ Row Level Security policies
-- ✅ Storage buckets and policies
-- ✅ Indexes and performance optimization
+### Prerequisites
+- Flutter SDK (latest)
+- Node.js & NPM
+- MySQL Server
 
-### **Core System (100%)**
-- ✅ Authentication system
-- ✅ Theme and styling
-- ✅ All data models
-- ✅ Complete services (Auth, Student, Admin)
-- ✅ Reusable widgets
+### 1. Database Setup
+1. Create a MySQL database named `internship_management`.
+2. Run the provided SQL scripts (if any) or ensure the schema is initialized.
 
-### **Screens Completed (6/15)**
-- ✅ Login Screen
-- ✅ Student Dashboard
-- ✅ Student Profile
-- ✅ Student Skills Management
-- ✅ Admin Dashboard
-- ⏳ 10 more screens in progress
+### 2. Backend Setup
+1. Navigate to the `server/` directory.
+2. Install dependencies: `npm install`
+3. Configure `.env` with your DB credentials and `JWT_SECRET`.
+4. Start the server: `node index.js`
 
----
-
-## 🎨 **Design System**
-
-### **Colors**
-- **Primary**: Blue (#2563EB)
-- **Secondary**: Purple (#7C3AED)
-- **Success**: Green (#10B981)
-- **Warning**: Orange (#F59E0B)
-- **Error**: Red (#EF4444)
-
-### **Features**
-- Clean, professional academic design
-- Card-based layout
-- Responsive web-first design
-- Status badges with color coding
-- Sidebar navigation
-- Material Design 3
+### 3. Frontend Setup
+1. Navigate back to the root directory.
+2. Install Flutter packages: `flutter pub get`
+3. Run the application: `flutter run -d chrome` (for web)
 
 ---
 
-## 🔒 **Security**
-
-- ✅ Row Level Security (RLS) enabled
-- ✅ Students can only access their own data
-- ✅ Admins have full access to all data
-- ✅ Secure file storage with user-based access
-- ✅ JWT-based authentication
+## 🔮 Future Enhancements
+- **AI Career Copilot**: AI-driven suggestions for skills based on internship trends.
+- **Direct Messaging**: In-app communication between Students and Admins.
+- **Export to PDF**: Generate professional resumes directly from the platform data.
+- **Dark Mode Optimization**: Comprehensive theme switching system.
 
 ---
 
-## 📝 **Usage Guide**
+## 👤 Author
+**Dhilip Kumar**  
+Developer & UI/UX Enthusiast
 
-### **For Students**
-1. Login with college email
-2. Complete your profile
-3. Add your skills
-4. Upload resume and certificates
-5. Wait for internship assignment
-6. Track internship progress
-
-### **For Admins**
-1. Login with admin credentials
-2. View dashboard statistics
-3. Search students by skills
-4. Assign internships to matching students
-5. Verify student certificates
-6. Add new student accounts
-
----
-
-## 🚧 **Remaining Work**
-
-### **Student Screens (4 remaining)**
-- Resume Upload Page
-- Certificates Page
-- Internship Details Page
-- Notifications Page
-
-### **Admin Screens (6 remaining)**
-- Student Management Page
-- Student Detail View
-- Skill-Based Search Page
-- Internship Assignment Page
-- Certificate Verification Page
-- Student Account Creation Page
-- Reports & Export Page
-
-### **Auth Screens (1 remaining)**
-- Forgot Password Screen
-
----
-
-## 🤝 **Contributing**
-
-This is a college project. For any issues or suggestions, please contact the development team.
-
----
-
-## 📄 **License**
-
-This project is for educational purposes.
-
----
-
-## 📞 **Support**
-
-For technical support or queries:
-- Email: support@interninfo.edu
-- Project Repository: [GitHub Link]
-
----
-
-## 🎯 **Roadmap**
-
-- ✅ Phase 1: Backend Setup & Core Features (Complete)
-- ✅ Phase 2: Authentication & Basic UI (Complete)
-- 🔄 Phase 3: Student Module (60% Complete)
-- ⏳ Phase 4: Admin Module (20% Complete)
-- ⏳ Phase 5: Testing & Deployment
-
----
-
-**Built with ❤️ using Flutter & Supabase**
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.

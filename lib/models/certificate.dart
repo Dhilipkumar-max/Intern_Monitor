@@ -1,12 +1,12 @@
 class Certificate {
-  final String id;
-  final String userId;
+  final int id;
+  final int userId;
   final String certificateType;
   final String fileUrl;
   final String fileName;
   final String verificationStatus;
   final String? adminRemark;
-  final String? verifiedBy;
+  final int? verifiedBy;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,16 +25,16 @@ class Certificate {
 
   factory Certificate.fromJson(Map<String, dynamic> json) {
     return Certificate(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
+      id: json['id'] as int,
+      userId: json['student_id'] as int,
       certificateType: json['certificate_type'] as String,
       fileUrl: json['file_url'] as String,
       fileName: json['file_name'] as String,
-      verificationStatus: json['verification_status'] as String,
+      verificationStatus: json['status'] as String,
       adminRemark: json['admin_remark'] as String?,
-      verifiedBy: json['verified_by'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      verifiedBy: json['verified_by'] as int?,
+      createdAt: DateTime.parse((json['uploaded_at'] ?? json['created_at']) as String),
+      updatedAt: DateTime.parse((json['uploaded_at'] ?? json['updated_at'] ?? json['created_at']) as String),
     );
   }
 

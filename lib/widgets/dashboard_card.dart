@@ -19,58 +19,74 @@ class DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final cardColor = color ?? AppTheme.primaryColor;
 
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: cardColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: cardColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: cardColor,
+                        size: 28,
+                      ),
                     ),
-                    child: Icon(
-                      icon,
-                      color: cardColor,
-                      size: 24,
-                    ),
-                  ),
-                  if (onTap != null)
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 16,
-                      color: AppTheme.textSecondary,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+                    if (onTap != null)
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 18,
+                        color: AppTheme.textSecondary.withOpacity(0.5),
+                      ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                        fontSize: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -1,91 +1,105 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../config/supabase_config.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../config/api_config.dart';
 import '../models/user_profile.dart';
 
 class AuthService {
-  final SupabaseClient _supabase = SupabaseConfig.client;
+  // Get current user ID from stored token (simplification: we'll use SharedPreferences to store the ID too)
+  Future<int?> get currentUserId async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('auth_user_id');
+  }
 
-  // Get current user
-  User? get currentUser => _supabase.auth.currentUser;
-
-  // Get current user ID
-  String? get currentUserId => _supabase.auth.currentUser?.id;
-
-  // Check if user is logged in
-  bool get isLoggedIn => _supabase.auth.currentUser != null;
-
-  // Sign in with email and password
-  Future<Map<String, dynamic>> signIn(String email, String password) async {
+  // Sign in with register number (for students) or email (for admins)
+  Future<Map<String, dynamic>> signIn(String identifier, String password, {bool isAdmin = false}) async {
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
+      final url = isAdmin 
+          ? Uri.parse('${ApiConfig.baseUrl}/auth/admin/login')
+          : Uri.parse('${ApiConfig.baseUrl}/auth/student/login');
+      
+      final body = isAdmin 
+          ? {'email': identifier, 'password': password}
+          : {'reg_no': identifier, 'password': password};
+
+      final response = await http.post(
+        url,
+        headers: ApiConfig.getHeaders(null),
+        body: jsonEncode(body),
       );
 
-      if (response.user == null) {
-        return {'success': false, 'message': 'Login failed'};
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final token = data['token'];
+        final profile = UserProfile.fromJson(data['user']);
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+        await prefs.setInt('auth_user_id', profile.id);
+        
+        return {
+          'success': true,
+          'user': profile,
+          'role': profile.role,
+        };
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Login failed'};
       }
-
-      // Fetch user profile to get role
-      final profileData = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', response.user!.id)
-          .single();
-
-      final profile = UserProfile.fromJson(profileData);
-
-      return {
-        'success': true,
-        'user': response.user,
-        'profile': profile,
-        'role': profile.role,
-      };
-    } on AuthException catch (e) {
-      return {'success': false, 'message': e.message};
     } catch (e) {
       return {'success': false, 'message': 'An error occurred: $e'};
     }
   }
 
-  // Sign up new user (admin only)
+  // Sign up new user
   Future<Map<String, dynamic>> signUp({
+    required String name,
     required String email,
     required String password,
-    required String name,
-    required String role,
-    String? registerNumber,
-    String? department,
+    String? regNo,
+    int? departmentId,
     int? year,
+    String? phone,
+    bool isAdmin = false,
   }) async {
     try {
-      final response = await _supabase.auth.signUp(
-        email: email,
-        password: password,
+      final url = isAdmin 
+          ? Uri.parse('${ApiConfig.baseUrl}/auth/admin/register')
+          : Uri.parse('${ApiConfig.baseUrl}/auth/student/register');
+      
+      final body = isAdmin 
+          ? {
+              'name': name,
+              'email': email,
+              'password': password,
+              'role': 'Admin',
+            }
+          : {
+              'reg_no': regNo,
+              'name': name,
+              'email': email,
+              'phone': phone,
+              'department_id': departmentId,
+              'year': year,
+              'password': password,
+            };
+
+      final response = await http.post(
+        url,
+        headers: ApiConfig.getHeaders(null),
+        body: jsonEncode(body),
       );
 
-      if (response.user == null) {
-        return {'success': false, 'message': 'Sign up failed'};
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': 'Account created successfully',
+        };
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Sign up failed'};
       }
-
-      // Create or update profile (upsert based on email)
-      await _supabase.from('profiles').upsert({
-        'id': response.user!.id, // Ensure the profile now uses the real Auth ID
-        'name': name,
-        'email': email,
-        'register_number': registerNumber,
-        'department': department,
-        'year': year,
-        'role': role,
-      }, onConflict: 'email');
-
-      return {
-        'success': true,
-        'user': response.user,
-        'message': 'Account created successfully',
-      };
-    } on AuthException catch (e) {
-      return {'success': false, 'message': e.message};
     } catch (e) {
       return {'success': false, 'message': 'An error occurred: $e'};
     }
@@ -93,47 +107,44 @@ class AuthService {
 
   // Sign out
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
+    await ApiConfig.removeToken();
   }
 
-  // Reset password
-  Future<Map<String, dynamic>> resetPassword(String email) async {
-    try {
-      await _supabase.auth.resetPasswordForEmail(email);
-      return {
-        'success': true,
-        'message': 'Password reset email sent',
-      };
-    } on AuthException catch (e) {
-      return {'success': false, 'message': e.message};
-    } catch (e) {
-      return {'success': false, 'message': 'An error occurred: $e'};
-    }
+  // Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    final token = await ApiConfig.getToken();
+    return token != null;
   }
 
   // Get user profile
-  Future<UserProfile?> getUserProfile(String userId) async {
+  Future<UserProfile?> getUserProfile(int userId) async {
     try {
-      final data = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .single();
+      final token = await ApiConfig.getToken();
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/students/profile/$userId'),
+        headers: ApiConfig.getHeaders(token),
+      );
 
-      return UserProfile.fromJson(data);
+      if (response.statusCode == 200) {
+        return UserProfile.fromJson(jsonDecode(response.body));
+      }
+      return null;
     } catch (e) {
       return null;
     }
   }
 
   // Update user profile
-  Future<bool> updateProfile(String userId, Map<String, dynamic> updates) async {
+  Future<bool> updateProfile(int userId, Map<String, dynamic> updates) async {
     try {
-      await _supabase
-          .from('profiles')
-          .update(updates)
-          .eq('id', userId);
-      return true;
+      final token = await ApiConfig.getToken();
+      final response = await http.put(
+        Uri.parse('${ApiConfig.baseUrl}/students/profile/$userId'),
+        headers: ApiConfig.getHeaders(token),
+        body: jsonEncode(updates),
+      );
+
+      return response.statusCode == 200;
     } catch (e) {
       return false;
     }

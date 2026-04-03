@@ -30,20 +30,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await _authService.signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+    final identifier = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    // Try student login first, then admin if it looks like an email or if student fails
+    var result = await _authService.signIn(identifier, password, isAdmin: false);
+    
+    if (!result['success'] && identifier.contains('@')) {
+      result = await _authService.signIn(identifier, password, isAdmin: true);
+    }
 
     setState(() => _isLoading = false);
 
     if (!mounted) return;
 
     if (result['success']) {
-      final role = result['role'];
+      final role = result['role'].toString().toLowerCase();
       if (role == 'student') {
         Navigator.pushReplacementNamed(context, '/student/dashboard');
-      } else if (role == 'admin') {
+      } else if (role.contains('admin')) {
         Navigator.pushReplacementNamed(context, '/admin/dashboard');
       }
     } else {
@@ -155,21 +160,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 32),
 
-                              // Email Field
+                              // Email / Reg No Field
                               TextFormField(
                                 controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
                                 decoration: const InputDecoration(
-                                  labelText: 'College Email',
-                                  hintText: 'your.email@college.edu',
-                                  prefixIcon: Icon(Icons.email_outlined),
+                                  labelText: 'Register Number / Email',
+                                  hintText: 'e.g. 21CS001 or name@college.edu',
+                                  prefixIcon: Icon(Icons.person_pin_outlined),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  if (!value.contains('@')) {
-                                    return 'Please enter a valid email';
+                                    return 'Please enter your Reg No or Email';
                                   }
                                   return null;
                                 },
@@ -209,16 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 12),
 
-                              // Forgot Password
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, '/forgot-password');
-                                  },
-                                  child: const Text('Forgot Password?'),
-                                ),
-                              ),
+                              const SizedBox(height: 12),
                               const SizedBox(height: 24),
 
                               // Login Button
